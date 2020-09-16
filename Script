@@ -1,0 +1,16 @@
+$targets = Get-Content .\targets.txt
+$alives = foreach ($targ in $targets) {
+	if (Test-Connection -ComputerName $targ -Quiet -Count 2) {
+		Write-Output $targ
+	}
+}
+
+$so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+
+New-PSSession -UseSSL -SessionOption $so -ComputerNAme $alives
+
+$sessions = Get-PSSession
+
+Invoke-Command -Session $sessions -ScriptBlock {Get-Service | Where-Object Status -eq "Running"} | Export-CSV -Path .\"INSERT-FILENAME.CSV"
+
+Remove-PSSession $(Get-PSSession)
